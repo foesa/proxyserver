@@ -66,7 +66,7 @@ def tkinter():
 
 	# Function to print all currently cached pages..
 	def print_cache():
-		for key, value in cache.iteritems():
+		for key, value in cache:
 			print (key)
 	print_blocked = Button(console, text="Print Cache", command=print_cache)
 	print_blocked.grid(row=3, column=1)
@@ -110,7 +110,6 @@ def main():
 			# Receive client data
 			data = conn.recv(MAX_DATA_RECV)
 			# Start a thread
-			print('Here1')
 			thread.start_new_thread(proxy_thread, (conn, data, client_addr))
 		except KeyboardInterrupt:
 			s.close()
@@ -121,21 +120,15 @@ def main():
 def proxy_thread(conn, data, client_addr):
 	print("")
 	print("[*] Starting new thread...")
-	print('Here2')
 	try:
 		# Parsing the request..
-		print('Here3')
-		first_line = data.split('\n')[0]
-		print(first_line)
+		first_line = str(data).split('\n')[0]
 		url = first_line.split(' ')[1]
-		print(url)
 		method = first_line.split(' ')[0]
-		print(method)
 		print("[*] Connecting to url " + url)
 		print("[*] Method: " + method)
 		if (DEBUG):
 			print("[*] URL: " + url)
-
 		# Find pos of ://
 		http_pos = url.find("://")
 		if (http_pos == -1):
@@ -163,18 +156,18 @@ def proxy_thread(conn, data, client_addr):
 			webserver = temp[:port_pos]
 
 		# Checking if we already have the response in our cache..
-	#	t0 = time.time()
-	#	x = cache.get(webserver)
-	#	if x is not None:
-	#		# If we do, don't bother with proxy_server function and send the response on..
-	#		print("[*] Found in Cache!")
-	#		print("[*] Sending cached response to user..")
-	#		conn.sendall(x)
-	#		t1 = time.time()
-	#		print("[*] Request took: " + str(t1-t0) + "s with cache.")
-	#		print("[*] Request took: " + str(timings[webserver]) + "s before it was cached..")
-	#		print("[*] That's " + str(timings[webserver]-(t1-t0)) + "s slower!")
-	#	else:
+		t0 = time.time()
+		x = cache.get(webserver)
+		if x is not None:
+			# If we do, don't bother with proxy_server function and send the response on..
+			print("[*] Found in Cache!")
+			print("[*] Sending cached response to user..")
+			conn.sendall(x)
+			t1 = time.time()
+			print("[*] Request took: " + str(t1-t0) + "s with cache.")
+			print("[*] Request took: " + str(timings[webserver]) + "s before it was cached..")
+			print("[*] That's " + str(timings[webserver]-(t1-t0)) + "s slower!")
+		else:
 			# If we don't, continue..
 			proxy_server(webserver, port, conn, client_addr, data, method)
 	except Exception :
@@ -182,18 +175,17 @@ def proxy_thread(conn, data, client_addr):
 
 
 def proxy_server(webserver, port, conn, client_addr, data, method):
-	print('Here5')
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # Initiating socket..
 	# Checking our blocked dict to check if the URL the user is trying to connect to
 	# is blocked..
-	#for key, value in blocked.iteritems():
-	#	if key in webserver and value is 1:
-	#		print("That url is blocked!")
-	#		conn.close()
-	#		return
+	for key, value in blocked:
+		if key == webserver and value is 1:
+			print("That url is blocked!")
+			conn.close()
+			return
 
 	# If the method is CONNECT, we know this is HTTPS.
-	if method == "CONNECT":
+	if method == "b'CONNECT":
 		try:
 			# Connect to the webserver..
 			s.connect((webserver, port))
@@ -261,7 +253,6 @@ def proxy_server(webserver, port, conn, client_addr, data, method):
 		s.close()
 		# Close client socket
 		conn.close()
-
 
 if __name__ == '__main__':
 	main()

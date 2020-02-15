@@ -74,6 +74,9 @@ def conn_string(conn,data,client_addr):
         else:
             port = int((temp[(port_pos+1):])[:webserver_pos-port_pos-1])
             webserver = temp[:port_pos]
+
+        print(port)
+        print(webserver)
         proxy_server(webserver,port,conn,client_addr,data)
     except Exception:
         pass
